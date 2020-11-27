@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"encoding/gob"
 	"fmt"
 	"os"
@@ -12,8 +13,8 @@ import (
 
 const (
 
-	//Token : Discord bot authentication token
-	Token = "NzgxNTU4NDE4NzU0MjQwNTUy.X7_Y_w.ZbeE7bNWbp8CqOBOOWFDsrlYhP8"
+	//TokenFile : Filename of file containing my private discord bot token
+	TokenFile = "token.txt"
 
 	//DataFile : Filename of data file
 	DataFile = "message_count.dat"
@@ -21,8 +22,14 @@ const (
 
 func main() {
 
+	discordToken, err := ioutil.ReadFile(TokenFile)
+	if err != nil {
+		fmt.Println("error reading discord token,", err)
+		return
+	}
+
 	// Create a new Discord session using the provided bot token.
-	dg, err := discordgo.New("Bot " + Token)
+	dg, err := discordgo.New("Bot " + string(discordToken))
 	if err != nil {
 		fmt.Println("error creating Discord session,", err)
 		return
