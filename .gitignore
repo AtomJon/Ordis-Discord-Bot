@@ -17,3 +17,6 @@
 ### PERSONLY ADDED ###
 # Data files, those are created on runtime
 *.dat
+
+# Private token file. NEVER UPLOAD THOSE
+token.txt
