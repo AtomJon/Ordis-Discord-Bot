@@ -79,7 +79,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	inputFile, err := os.Open(DataFile)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
 
 	gob.NewDecoder(inputFile).Decode(&data)
@@ -99,7 +99,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	outputFile, err := os.Create(DataFile)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
 	}
 
 	gob.NewEncoder(outputFile).Encode(&data)
