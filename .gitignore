@@ -13,3 +13,7 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+### PERSONLY ADDED ###
+# Data files, those are created on runtime
+*.dat
