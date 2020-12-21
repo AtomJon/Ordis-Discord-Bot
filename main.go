@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -99,7 +100,17 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	data := userdata.LoadUserData(_DataFile)
 	user, exists := data[m.Author.ID]
 
-	if !exists {
+	userJoinedAt, err := m.Member.JoinedAt.Parse()
+	if err != nil {
+		fmt.Println("Error parsing time: ", err)
+	}
+
+	stillNewDuration, err := time.ParseDuration("2h")
+	if err != nil {
+		fmt.Println("Error parsing timeout duration: ", err)
+	}
+
+	if !exists && time.Now().Sub(userJoinedAt) > stillNewDuration {
 		fmt.Println("User joined")
 		authorizeUser(s, m)
 	} else {
@@ -115,7 +126,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func authorizeUser(session *discordgo.Session, m *discordgo.MessageCreate) {
-	channel, err := session.UserChannelCreate(m.Member.User.ID)
+	
+	channel, err := session.UserChannelCreate(m.Author.ID)
 	if err != nil {
 		fmt.Println("Error creating private channel: ", err)
 	}
