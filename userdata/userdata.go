@@ -10,6 +10,7 @@ import (
 type UserData struct {
 	MessagesSent 	int
 	PreferedReferal string
+	Authorized		bool
 }
 
 // AuthorizationData An struct for holding reference to users private channel

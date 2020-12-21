@@ -69,38 +69,6 @@ func main() {
 // message is created on any channel that the authenticated bot has access to.
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
-	fmt.Printf("MsgType: %v\n", m.Type)
-
-	switch m.Type {
-	// Authorize user
-	case discordgo.MessageTypeGuildMemberJoin:
-		fmt.Println("User joined")
-		authorizeUser(s, m)
-		return
-	// An message was sent, continue
-	case discordgo.MessageTypeDefault:
-		break
-	// Asumme reaction
-	default:
-		for _, v := range _UsersBeingAuthorized {
-			users, err := s.MessageReactions(v.PrivateChannelID, v.AuthorizationMessageID, ":white_check_mark:", 1, "", "")
-			if err != nil {
-				fmt.Println("Error checking dm reactions: ", err)
-			}
-
-			if len(users) > 0 && users[0].ID == v.UserID {
-				fmt.Printf("%s succesfully authorized", users[0].Username)
-
-				err = s.GuildMemberRoleAdd(v.GuildID, users[0].ID, _AuthorizedRoleID)
-				if err != nil {
-					fmt.Println("Error giving user authorized role: ", err)
-				}
-			}
-		}
-
-		return
-	}
-
 	// Ignore all messages created by the bot itself
 	// This isn't required in this specific example but it's a good practice.
 	if m.Author.ID == s.State.User.ID {
@@ -112,16 +80,33 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	data := userdata.LoadUserData(_DataFile)
+	for _, v := range _UsersBeingAuthorized {
+		users, err := s.MessageReactions(v.PrivateChannelID, v.AuthorizationMessageID, ":white_check_mark:", 1, "", "")
+		if err != nil {
+			fmt.Println("Error checking dm reactions: ", err)
+		}
 
-	user, exists := data[m.Author.ID]
-	if !exists {
-		// Is the user already in database. Else, set messages to one
-		user.MessagesSent = 1
-	} else {
-		// If the user is in database, increment messages by one
-		user.MessagesSent++
+		if len(users) > 0 && users[0].ID == v.UserID {
+			fmt.Printf("%s succesfully authorized", users[0].Username)
+
+			err = s.GuildMemberRoleAdd(v.GuildID, users[0].ID, _AuthorizedRoleID)
+			if err != nil {
+				fmt.Println("Error giving user authorized role: ", err)
+			}
+		}
 	}
+
+	data := userdata.LoadUserData(_DataFile)
+	user, exists := data[m.Author.ID]
+
+	if !exists && !user.Authorized {
+		fmt.Println("User joined")
+		authorizeUser(s, m)
+		return
+	}
+
+	// If the user is in database, increment messages by one
+	user.MessagesSent++
 
 	data[m.Author.ID] = user
 
