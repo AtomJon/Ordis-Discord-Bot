@@ -1,6 +1,7 @@
 package main
 
 import (
+	"Ordis-Discord-Bot/userdata"
 	"io/ioutil"
 	"encoding/gob"
 	"fmt"
@@ -17,7 +18,7 @@ const (
 	TokenFile = "token.txt"
 
 	//DataFile : Filename of data file
-	DataFile = "message_count.dat"
+	DataFile = "users.dat"
 )
 
 func main() {
@@ -75,7 +76,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	data := map[string]int{}
+	data := map[string]userdata.UserData{}
 
 	inputFile, err := os.Open(DataFile)
 	if err != nil {
@@ -87,15 +88,15 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	user, exists := data[m.Author.ID]
 	if !exists {
 		// Is the user already in database. Else, set messages to one
-		user = 1
+		user.MessagesSent = 1
 	} else {
 		// If the user is in database, increment messages by one
-		user++
+		user.MessagesSent++
 	}
 
 	data[m.Author.ID] = user
 
-	fmt.Printf("%s has written %d messages\n", m.Author.Username, user)
+	fmt.Printf("%s has written %d messages\n", m.Author.Username, user.MessagesSent)
 
 	outputFile, err := os.Create(DataFile)
 	if err != nil {
