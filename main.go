@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Ordis-Discord-Bot/userdata"
+	"github.com/AtomJon/Ordis-Discord-Bot/userdata"
 	"io/ioutil"
 	"fmt"
 	"os"
@@ -45,8 +45,12 @@ func main() {
 	// Register the messageCreate func as a callback for MessageCreate events.
 	dg.AddHandler(messageCreate)
 
+<<<<<<< HEAD
 	// In this example, we only care about receiving message events.
 	dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildMessages | discordgo.IntentsGuildMembers | discordgo.IntentsDirectMessages | discordgo.IntentsDirectMessageReactions)
+=======
+	dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildMessages | discordgo.IntentsDirectMessages | discordgo.IntentsDirectMessageReactions | discordgo.IntentsGuildMembers)
+>>>>>>> 68a620250b8c31ab9bdac1df6556fc49b23b756b
 
 	// Open a websocket connection to Discord and begin listening.
 	err = dg.Open()
@@ -97,6 +101,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				}
 			}
 		}
+
+		return
 	}
 
 	// Ignore all messages created by the bot itself
@@ -125,7 +131,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	fmt.Printf("%s has written %d messages\n", m.Author.Username, user.MessagesSent)
 
-	userdata.SaveUserData(_DataFile, data)
+	userdata.SaveUserData(_DataFile, &data)
 }
 
 func authorizeUser(session *discordgo.Session, m *discordgo.MessageCreate) {
