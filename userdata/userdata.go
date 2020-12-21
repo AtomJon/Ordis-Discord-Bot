@@ -35,7 +35,7 @@ func LoadUserData(dataFile string) (map[string]UserData) {
 }
 
 //SaveUserData Saves the data in dataFile
-func SaveUserData(dataFile string, data *interface{}) {
+func SaveUserData(dataFile string, data *(map[string]UserData)) {
 	outputFile, err := os.Create(dataFile)
 	if err != nil {
 		fmt.Println(err)
