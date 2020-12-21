@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Ordis-Discord-Bot/userdata"
+	"github.com/AtomJon/Ordis-Discord-Bot/userdata"
 	"io/ioutil"
 	"fmt"
 	"os"
