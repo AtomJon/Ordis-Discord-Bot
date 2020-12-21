@@ -99,7 +99,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	data := userdata.LoadUserData(_DataFile)
 	user, exists := data[m.Author.ID]
 
-	if !exists && !user.Authorized {
+	if !exists {
 		fmt.Println("User joined")
 		authorizeUser(s, m)
 		return
