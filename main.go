@@ -3,7 +3,6 @@ package main
 import (
 	"Ordis-Discord-Bot/userdata"
 	"io/ioutil"
-	"encoding/gob"
 	"fmt"
 	"os"
 	"os/signal"
@@ -13,17 +12,22 @@ import (
 )
 
 const (
+	//_TokenFile : Filename of file containing my private discord bot token
+	_TokenFile = "token.txt"
 
-	//TokenFile : Filename of file containing my private discord bot token
-	TokenFile = "token.txt"
+	//_DataFile : Filename of data file
+	_DataFile = "users.dat"
 
-	//DataFile : Filename of data file
-	DataFile = "users.dat"
+	_AuthorizeUserMessage = "Welcome to Department of Debauchery, please react :white_check_mark: to this message to be allow acces to the server."
+
+	_AuthorizedRoleID = "<@&651861255438467083>"
 )
+
+var _UsersBeingAuthorized []userdata.AuthorizationData
 
 func main() {
 
-	discordToken, err := ioutil.ReadFile(TokenFile)
+	discordToken, err := ioutil.ReadFile(_TokenFile)
 	if err != nil {
 		fmt.Println("error reading discord token,", err)
 		return
@@ -65,9 +69,32 @@ func main() {
 // message is created on any channel that the authenticated bot has access to.
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
-	if m.Type == discordgo.MessageTypeGuildMemberJoin {
+	switch m.Type {
+	// Authorize user
+	case discordgo.MessageTypeGuildMemberJoin:
 		fmt.Println("User joined")
+		authorizeUser(s, m)
 		return
+	// An message was sent, continue
+	case discordgo.MessageTypeDefault:
+		break
+	// Asumme reaction
+	default:
+		for _, v := range _UsersBeingAuthorized {
+			users, err := s.MessageReactions(v.PrivateChannelID, v.AuthorizationMessageID, ":white_check_mark:", 1, "", "")
+			if err != nil {
+				fmt.Println("Error checking dm reactions: ", err)
+			}
+
+			if len(users) > 0 && users[0].ID == v.UserID {
+				fmt.Printf("%s succesfully authorized", users[0].Username)
+
+				err = s.GuildMemberRoleAdd(v.GuildID, users[0].ID, _AuthorizedRoleID)
+				if err != nil {
+					fmt.Println("Error giving user authorized role: ", err)
+				}
+			}
+		}
 	}
 
 	// Ignore all messages created by the bot itself
@@ -81,14 +108,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	data := map[string]userdata.UserData{}
-
-	inputFile, err := os.Open(DataFile)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	gob.NewDecoder(inputFile).Decode(&data)
+	data := userdata.LoadUserData(_DataFile)
 
 	user, exists := data[m.Author.ID]
 	if !exists {
@@ -103,10 +123,32 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	fmt.Printf("%s has written %d messages\n", m.Author.Username, user.MessagesSent)
 
-	outputFile, err := os.Create(DataFile)
+	userdata.SaveUserData(_DataFile, data)
+}
+
+func authorizeUser(session *discordgo.Session, m *discordgo.MessageCreate) {
+	channel, err := session.UserChannelCreate(m.Member.User.ID)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("Error creating private channel: ", err)
 	}
 
-	gob.NewEncoder(outputFile).Encode(&data)
+	msg, err := session.ChannelMessageSend(channel.ID, _AuthorizeUserMessage)
+	if err != nil {
+		fmt.Println("Error sending dm: ", err)
+	}
+
+	err = session.MessageReactionAdd(channel.ID, msg.ID, ":white_check_mark:")
+	if err != nil {
+		fmt.Println("Error adding reaction to auth dm: ", err)
+	}
+
+	authData := userdata.AuthorizationData {
+		PrivateChannelID: channel.ID,
+		AuthorizationMessageID: msg.ID,
+		UserID: m.Member.User.ID,
+		GuildID: m.GuildID,
+	}
+
+	_UsersBeingAuthorized = append(_UsersBeingAuthorized, authData)
+	fmt.Printf("%s is being authorized\n", m.Member.Nick)
 }
