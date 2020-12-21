@@ -102,11 +102,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if !exists {
 		fmt.Println("User joined")
 		authorizeUser(s, m)
-		return
-	}
-
-	// If the user is in database, increment messages by one
-	user.MessagesSent++
+	} else {
+		// If the user is in database, increment messages by one
+		user.MessagesSent++
+	}	
 
 	data[m.Author.ID] = user
 
