@@ -45,7 +45,6 @@ func main() {
 	// Register the messageCreate func as a callback for MessageCreate events.
 	dg.AddHandler(messageCreate)
 
-	// In this example, we only care about receiving message events.
 	dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildMessages | discordgo.IntentsDirectMessages | discordgo.IntentsDirectMessageReactions | discordgo.IntentsGuildMembers)
 
 	// Open a websocket connection to Discord and begin listening.
@@ -68,6 +67,8 @@ func main() {
 // This function will be called (due to AddHandler above) every time a new
 // message is created on any channel that the authenticated bot has access to.
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
+
+	fmt.Printf("MsgType: %v", m.Type)
 
 	switch m.Type {
 	// Authorize user
@@ -95,6 +96,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				}
 			}
 		}
+
+		return
 	}
 
 	// Ignore all messages created by the bot itself
@@ -123,7 +126,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	fmt.Printf("%s has written %d messages\n", m.Author.Username, user.MessagesSent)
 
-	userdata.SaveUserData(_DataFile, data)
+	userdata.SaveUserData(_DataFile, &data)
 }
 
 func authorizeUser(session *discordgo.Session, m *discordgo.MessageCreate) {

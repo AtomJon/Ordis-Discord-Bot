@@ -35,11 +35,11 @@ func LoadUserData(dataFile string) (map[string]UserData) {
 }
 
 //SaveUserData Saves the data in dataFile
-func SaveUserData(dataFile string, data interface{}) {
+func SaveUserData(dataFile string, data *interface{}) {
 	outputFile, err := os.Create(dataFile)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	gob.NewEncoder(outputFile).Encode(&data)
+	gob.NewEncoder(outputFile).Encode(data)
 }
