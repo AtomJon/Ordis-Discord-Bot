@@ -109,7 +109,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				}
 					
 				fmt.Println("User joined")
-				authorizeUser(s, m)
+				authorizeUser(s, m.Member)
 			}
 		}
 
@@ -144,30 +144,38 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	userdata.SaveUserData(_DataFile, &data)
 }
 
-func authorizeUser(session *discordgo.Session, m *discordgo.MessageCreate) {
+func authorizeUser(session *discordgo.Session, member *discordgo.Member) {
 	
-	channel, err := session.UserChannelCreate(m.Author.ID)
+	channel, err := session.UserChannelCreate(member.User.ID)
 	if err != nil {
 		fmt.Println("Error creating private channel: ", err)
+		return
+	}
+
+	if channel == nil {
+		fmt.Println("Error private channel is nil")
+		return
 	}
 
 	msg, err := session.ChannelMessageSend(channel.ID, _AuthorizeUserMessage)
 	if err != nil {
 		fmt.Println("Error sending dm: ", err)
+		return
 	}
 
 	err = session.MessageReactionAdd(channel.ID, msg.ID, ":white_check_mark:")
 	if err != nil {
 		fmt.Println("Error adding reaction to auth dm: ", err)
+		return
 	}
 
 	authData := userdata.AuthorizationData {
 		PrivateChannelID: channel.ID,
 		AuthorizationMessageID: msg.ID,
-		UserID: m.Member.User.ID,
-		GuildID: m.GuildID,
+		UserID: member.User.ID,
+		GuildID: member.GuildID,
 	}
 
 	_UsersBeingAuthorized = append(_UsersBeingAuthorized, authData)
-	fmt.Printf("%s is being authorized\n", m.Member.Nick)
+	fmt.Printf("%s is being authorized\n", member.Nick)
 }
