@@ -101,7 +101,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 		
 			fmt.Println("He joined: ", time.Now().Sub(userJoinedAt))
-			if time.Now().Sub(userJoinedAt) > stillNewDuration {
+			if time.Now().Sub(userJoinedAt) < stillNewDuration {
 				for _, role := range member.Roles {					
 					if role == _AuthorizedRoleID {
 						return
