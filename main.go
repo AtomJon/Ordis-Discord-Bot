@@ -77,35 +77,33 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	data := userdata.LoadUserData(_DataFile)
-	user, exists := data[m.Author.ID]
+	user, _ := data[m.Author.ID]
 
 	// Ignore messages by bots
 	if m.Author.Bot {
-		if !exists 	{	
-			for _, user := range m.Mentions {					
-				member, err := s.GuildMember(m.GuildID, user.ID)
-				if err != nil {
-					fmt.Println("Error getting member info: ", err)
-					return
-				}
-				
-				userJoinedAt, err := member.JoinedAt.Parse()
-				if err != nil {
-					fmt.Println("Error parsing time: ", err)
-				}
+		for _, user := range m.Mentions {					
+			member, err := s.GuildMember(m.GuildID, user.ID)
+			if err != nil {
+				fmt.Println("Error getting member info: ", err)
+				return
+			}
 			
-				stillNewDuration, err := time.ParseDuration("2h")
-				if err != nil {
-					fmt.Println("Error parsing timeout duration: ", err)
-				}
-			
-				if time.Now().Sub(userJoinedAt) > stillNewDuration {
-					for _, role := range member.Roles {						
-						if role == _AuthorizedRoleID {
-							fmt.Println("User joined")
-							authorizeUser(s, m)
-							return
-						}
+			userJoinedAt, err := member.JoinedAt.Parse()
+			if err != nil {
+				fmt.Println("Error parsing time: ", err)
+			}
+		
+			stillNewDuration, err := time.ParseDuration("2h")
+			if err != nil {
+				fmt.Println("Error parsing timeout duration: ", err)
+			}
+		
+			if time.Now().Sub(userJoinedAt) > stillNewDuration {
+				for _, role := range member.Roles {						
+					if role == _AuthorizedRoleID {
+						fmt.Println("User joined")
+						authorizeUser(s, m)
+						return
 					}
 				}
 			}
