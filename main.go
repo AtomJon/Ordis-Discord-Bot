@@ -81,7 +81,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	// Ignore messages by bots
 	if m.Author.Bot {
-		for _, user := range m.Mentions {					
+		fmt.Print("Message sent by bot")
+		for _, user := range m.Mentions {		
+			fmt.Print("Mentioned: ", user.Username)			
 			member, err := s.GuildMember(m.GuildID, user.ID)
 			if err != nil {
 				fmt.Println("Error getting member info: ", err)
@@ -98,14 +100,16 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				fmt.Println("Error parsing timeout duration: ", err)
 			}
 		
+			fmt.Println("He joined: ", time.Now().Sub(userJoinedAt))
 			if time.Now().Sub(userJoinedAt) > stillNewDuration {
-				for _, role := range member.Roles {						
+				for _, role := range member.Roles {					
 					if role == _AuthorizedRoleID {
-						fmt.Println("User joined")
-						authorizeUser(s, m)
 						return
 					}
 				}
+					
+				fmt.Println("User joined")
+				authorizeUser(s, m)
 			}
 		}
 
