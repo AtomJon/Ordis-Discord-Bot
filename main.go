@@ -109,7 +109,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				}
 					
 				fmt.Println("User joined")
-				authorizeUser(s, m.Member)
+				authorizeUser(s, member)
 			}
 		}
 
@@ -145,7 +145,12 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func authorizeUser(session *discordgo.Session, member *discordgo.Member) {
+	if member.User == nil {
+		fmt.Println("Error member.User is nil")
+		return
+	}
 	
+
 	channel, err := session.UserChannelCreate(member.User.ID)
 	if err != nil {
 		fmt.Println("Error creating private channel: ", err)
