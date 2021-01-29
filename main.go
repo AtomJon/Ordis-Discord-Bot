@@ -1,7 +1,5 @@
 package main
 
-//DelayedUserReminder
-
 import (
 	"fmt"
 	"io/ioutil"
@@ -22,13 +20,12 @@ const (
 	//_DataFile : Filename of data file
 	_DataFile = "users.dat"
 
-	_AuthorizeUserMessage = "Welcome to Department of Debauchery, please react :white_check_mark: to this message to be allow acces to the server."
-	_AuthorizeCheckEmoji = "✅"
+	_RemindUserMessage = "Could you please go to the door-sign and verificate yourself, sir?"
 
 	_AuthorizedRoleID = "651861255438467083"
-)
 
-var _UsersBeingAuthorized []userdata.AuthorizationData
+	_RemindDelay = time.Duration(30)
+)
 
 func main() {
 
@@ -50,7 +47,6 @@ func main() {
 	// Register the handlers
 	dg.AddHandler(messageCreate)
 	dg.AddHandler(guildUpdate)
-	dg.AddHandler(reactionAdded)
 
 	// In this example, we only care about receiving message events.
 	dg.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsAll)//discordgo.IntentsGuildMessages | discordgo.IntentsGuildMembers | discordgo.IntentsDirectMessages | discordgo.IntentsDirectMessageReactions)
@@ -72,31 +68,6 @@ func main() {
 	dg.Close()
 }
 
-func reactionAdded(s *discordgo.Session, m *discordgo.MessageReactionAdd ) {
-	if m.UserID == s.State.User.ID {
-		return
-	}
-
-	if m.Emoji.Name != _AuthorizeCheckEmoji {
-		return
-	}
-
-	for _, v := range _UsersBeingAuthorized {
-		if m.MessageID == v.AuthorizationMessageID {
-			fmt.Printf("Authorizing user: %s, guild: %s\n", v.UserID, v.GuildID)
-
-			err := s.GuildMemberRoleAdd(v.GuildID, v.UserID, _AuthorizedRoleID) // TODO: FIX
-			if err != nil {
-				fmt.Println("Error giving user authorized role: ", err)
-			} else {
-				fmt.Println("User has been succesfully authorized")
-			}
-			
-			return
-		}
-	}
-}
-
 func guildUpdate(s *discordgo.Session, m *discordgo.PresenceUpdate) {
 
 	if m.User.ID == s.State.User.ID {
@@ -107,40 +78,43 @@ func guildUpdate(s *discordgo.Session, m *discordgo.PresenceUpdate) {
 		return
 	}
 
-	// If user joins, the status will be online, so skip the rest
-	if m.Status != discordgo.StatusOnline {
-		return
-	}
-
 	member, err := s.GuildMember(m.GuildID, m.User.ID)
 	if err != nil {
-		fmt.Println("Error getting member info: ", err)
+		fmt.Println("Error while getting member info: %w", err)
 		return
 	}
-	
-	userJoinedAt, err := member.JoinedAt.Parse()
-	if err != nil {
-		fmt.Println("Error parsing time: ", err)
+
+	if userIsAuthorized(member) {
+		return
 	}
 
-	stillNewDuration, err := time.ParseDuration("2h")
-	if err != nil {
-		fmt.Println("Error parsing timeout duration: ", err)
-	}
-	
-	if time.Now().Sub(userJoinedAt) < stillNewDuration {
-		for _, role := range member.Roles {					
-			if role == _AuthorizedRoleID {
+	time.AfterFunc(_RemindDelay, func() {
+		if (!userIsAuthorized(member)) {
+			channel, err := s.UserChannelCreate(m.User.ID)
+			if err != nil {
+				fmt.Println("Error while creating user channel: %w", err)
+				return
+			}
+
+			_, err = s.ChannelMessageSend(channel.ID, _RemindUserMessage)
+			if err != nil {
+				fmt.Println("Error while sending private message: %w", err)
 				return
 			}
 		}
-
-		authorizeUser(s, m.User.ID, m.GuildID)
-	}
+	});
 }
 
-// This function will be called (due to AddHandler above) every time a new
-// message is created on any channel that the authenticated bot has access to.
+func userIsAuthorized(user *discordgo.Member) bool {
+	for _, role := range user.Roles {
+		if role == _AuthorizedRoleID {
+			return true
+		}
+	}
+
+	return false
+}
+
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if m.Author.ID == s.State.User.ID {
@@ -162,40 +136,4 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	fmt.Printf("%s has written %d messages\n", m.Author.Username, user.MessagesSent)
 
 	userdata.SaveUserData(_DataFile, &data)
-}
-
-func authorizeUser(session *discordgo.Session, userID string, guildID string) {
-
-	channel, err := session.UserChannelCreate(userID)
-	if err != nil {
-		fmt.Println("Error creating private channel: ", err)
-		return
-	}
-
-	if channel == nil {
-		fmt.Println("Error private channel is nil")
-		return
-	}
-
-	msg, err := session.ChannelMessageSend(channel.ID, _AuthorizeUserMessage)
-	if err != nil {
-		fmt.Println("Error sending dm: ", err)
-		return
-	}
-
-	err = session.MessageReactionAdd(channel.ID, msg.ID, _AuthorizeCheckEmoji)
-	if err != nil {
-		fmt.Println("Error adding reaction to auth dm: ", err)
-		return
-	}
-
-	authData := userdata.AuthorizationData {
-		PrivateChannelID: channel.ID,
-		AuthorizationMessageID: msg.ID,
-		UserID: userID,
-		GuildID: guildID,
-	}
-
-	_UsersBeingAuthorized = append(_UsersBeingAuthorized, authData)
-	fmt.Printf("%s is being authorized\n", userID)
 }
