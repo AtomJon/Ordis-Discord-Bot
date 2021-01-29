@@ -20,11 +20,11 @@ const (
 	//_DataFile : Filename of data file
 	_DataFile = "users.dat"
 
-	_RemindUserMessage = "Could you please go to the door-sign and verificate yourself, sir?"
+	_RemindUserMessage = "Hello there! Welcome to our server! Be sure to visit the #🔑-door-sign channel and get the member role to have access to the entire server."
 
 	_AuthorizedRoleID = "651861255438467083"
 
-	_RemindDelay = time.Duration(30)
+	_RemindDelay = time.Second * 30
 )
 
 func main() {
