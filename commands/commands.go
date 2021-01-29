@@ -23,7 +23,7 @@ var Commands = []Command{
 		for _, mentioned := range m.Mentions {
 			member, err := s.GuildMember(m.GuildID, mentioned.ID)
 			if err != nil {
-				fmt.Println("Error while sending private message: %w", err)
+				fmt.Println("Error while obtaining member info: ", err)
 				return "Critical error :_"
 			}
 

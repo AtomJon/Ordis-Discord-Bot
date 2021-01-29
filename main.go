@@ -134,7 +134,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	fmt.Printf("%s has written %d messages\n", m.Author.Username, user.MessagesSent)
 
 	for _, mention := range m.Mentions {
-		if mention.ID == s.State.User.ID {
+		if mention.ID != s.State.User.ID {
 			for _, command := range commands.Commands {
 				match, err := regexp.Match(command.TriggerExpression, []byte(m.Content))
 				if err != nil {
