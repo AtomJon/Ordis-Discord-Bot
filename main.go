@@ -138,14 +138,14 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			for _, command := range commands.Commands {
 				match, err := regexp.Match(command.TriggerExpression, []byte(m.Content))
 				if err != nil {
-					fmt.Println("Error parsing regexp: %w", err)
+					fmt.Println("Error parsing regexp: ", err)
 				}
 		
 				if (match) {
 					msg := command.Activate(s, m)
 					_, err = s.ChannelMessageSend(m.ChannelID, msg)
 					if err != nil {
-						fmt.Println("Error while sending response message: %w", err)
+						fmt.Println("Error while sending response message: ", err)
 					}
 				}
 			}
