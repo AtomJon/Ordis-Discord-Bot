@@ -1,13 +1,16 @@
 package main
 
+//DelayedUserReminder
+
 import (
-	"github.com/AtomJon/Ordis-Discord-Bot/userdata"
-	"io/ioutil"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/AtomJon/Ordis-Discord-Bot/userdata"
 
 	"github.com/bwmarrin/discordgo"
 )
