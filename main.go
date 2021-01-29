@@ -20,8 +20,7 @@ const (
 	//_DataFile : Filename of data file
 	_DataFile = "users.dat"
 
-	_RemindUserMessage = "
-	Could you please go to the door-sign channel and pick the member role, so that you can access the rest of the server, sir?"
+	_RemindUserMessage = "Could you please go to the door-sign channel and pick the member role, so that you can access the rest of the server, sir?"
 
 	_AuthorizedRoleID = "651861255438467083"
 
