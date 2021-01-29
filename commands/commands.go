@@ -17,7 +17,7 @@ type Command struct {
 
 //Commands : List of commands 
 var Commands = []Command{
-	{"?.is|these.?.authorized.)", func(s *discordgo.Session, m *discordgo.MessageCreate) string {
+	{"(is|these).*authorized", func(s *discordgo.Session, m *discordgo.MessageCreate) string {
 		msg := ""
 
 		for _, mentioned := range m.Mentions {
