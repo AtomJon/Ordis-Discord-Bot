@@ -1,23 +1,15 @@
 package userdata
 
 import (
-	"os"
-	"fmt"
 	"encoding/gob"
+	"fmt"
+	"os"
 )
 
 // UserData An type for storing user data
 type UserData struct {
 	MessagesSent 	int
 	PreferedReferal string
-}
-
-// AuthorizationData An struct for holding reference to users private channel
-type AuthorizationData struct {
-	PrivateChannelID 		string
-	AuthorizationMessageID 	string
-	UserID			 		string
-	GuildID					string
 }
 
 //LoadUserData Returns the userdata saved in dataFile
