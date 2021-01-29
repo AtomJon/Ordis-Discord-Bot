@@ -5,9 +5,12 @@ import (
 	"io/ioutil"
 	"os"
 	"os/signal"
+	"regexp"
 	"syscall"
 	"time"
 
+	"github.com/AtomJon/Ordis-Discord-Bot/commands"
+	"github.com/AtomJon/Ordis-Discord-Bot/constants"
 	"github.com/AtomJon/Ordis-Discord-Bot/userdata"
 
 	"github.com/bwmarrin/discordgo"
@@ -17,12 +20,7 @@ const (
 	//_TokenFile : Filename of file containing my private discord bot token
 	_TokenFile = "token.txt"
 
-	//_DataFile : Filename of data file
-	_DataFile = "users.dat"
-
 	_RemindUserMessage = "Could you please go to the door-sign channel and pick the member role, so that you can access the rest of the server, sir?"
-
-	_AuthorizedRoleID = "651861255438467083"
 
 	_RemindDelay = time.Second * 30
 )
@@ -107,7 +105,7 @@ func guildUpdate(s *discordgo.Session, m *discordgo.PresenceUpdate) {
 
 func userIsAuthorized(user *discordgo.Member) bool {
 	for _, role := range user.Roles {
-		if role == _AuthorizedRoleID {
+		if role == constants.AuthorizedRoleID {
 			return true
 		}
 	}
@@ -125,7 +123,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	data := userdata.LoadUserData(_DataFile)
+	data := userdata.LoadUserData(constants.DataFile)
 	user, _ := data[m.Author.ID]
 	
 	// increment messages by one
@@ -135,5 +133,22 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	fmt.Printf("%s has written %d messages\n", m.Author.Username, user.MessagesSent)
 
-	userdata.SaveUserData(_DataFile, &data)
+	for _, command := range commands.Commands {
+		match, err := regexp.Match(command.TriggerExpression, []byte(m.Content))
+		if err != nil {
+			fmt.Println("Error parsing regexp: %w", err)
+			return
+		}
+
+		if (match) {
+			msg := command.Activate(s, m)
+			_, err = s.ChannelMessageSend(m.ChannelID, msg)
+			if err != nil {
+				fmt.Println("Error while sending response message: %w", err)
+				return
+			}
+		}
+	}
+
+	userdata.SaveUserData(constants.DataFile, &data)
 }
