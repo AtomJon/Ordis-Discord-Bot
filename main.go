@@ -78,7 +78,7 @@ func guildUpdate(s *discordgo.Session, m *discordgo.PresenceUpdate) {
 
 	member, err := s.GuildMember(m.GuildID, m.User.ID)
 	if err != nil {
-		fmt.Println("Error while getting member info: %w", err)
+		fmt.Println("Error while getting member info: ", err)
 		return
 	}
 
@@ -86,21 +86,29 @@ func guildUpdate(s *discordgo.Session, m *discordgo.PresenceUpdate) {
 		return
 	}
 
-	time.AfterFunc(_RemindDelay, func() {
-		if (!userIsAuthorized(member)) {
-			channel, err := s.UserChannelCreate(m.User.ID)
-			if err != nil {
-				fmt.Println("Error while creating user channel: %w", err)
-				return
-			}
+	joinedAt, err := member.JoinedAt.Parse()
+	if err != nil {
+		fmt.Println("Error while parsing time: ", err)
+		return
+	}
 
-			_, err = s.ChannelMessageSend(channel.ID, _RemindUserMessage)
-			if err != nil {
-				fmt.Println("Error while sending private message: %w", err)
-				return
+	if joinedAt.Add(time.Minute * 20).Before(time.Now()) {
+		time.AfterFunc(_RemindDelay, func() {
+			if (!userIsAuthorized(member)) {
+				channel, err := s.UserChannelCreate(m.User.ID)
+				if err != nil {
+					fmt.Println("Error while creating user channel: ", err)
+					return
+				}
+	
+				_, err = s.ChannelMessageSend(channel.ID, _RemindUserMessage)
+				if err != nil {
+					fmt.Println("Error while sending private message: %w", err)
+					return
+				}
 			}
-		}
-	});
+		});
+	}	
 }
 
 func userIsAuthorized(user *discordgo.Member) bool {
@@ -142,6 +150,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				}
 		
 				if (match) {
+					fmt.Println("Match on command: ", command);
+
 					msg := command.Activate(s, m)
 					_, err = s.ChannelMessageSend(m.ChannelID, msg)
 					if err != nil {
@@ -149,6 +159,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 					}
 				}
 			}
+
+			break
 		}
 	}	
 
