@@ -92,7 +92,7 @@ func guildUpdate(s *discordgo.Session, m *discordgo.PresenceUpdate) {
 		return
 	}
 
-	if joinedAt.Add(time.Minute * 20).Before(time.Now()) {
+	if time.Now().Before(joinedAt.Add(time.Minute * 20)) {
 		time.AfterFunc(_RemindDelay, func() {
 			if (!userIsAuthorized(member)) {
 				channel, err := s.UserChannelCreate(m.User.ID)
