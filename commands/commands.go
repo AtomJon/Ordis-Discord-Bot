@@ -58,7 +58,7 @@ var Commands = []Command{
 			}
 
 			data := userdata.LoadUserData(constants.DataFile)
-			user := data[m.Author.ID]
+			user := data[mentioned.ID]
 					
 			if mentioned.ID != s.State.User.ID {
 				msg += fmt.Sprintf("%s has written %d messages\n", member.Mention(), user.MessagesSent)
