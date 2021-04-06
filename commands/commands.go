@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/AtomJon/Ordis-Discord-Bot/constants"
+	"github.com/AtomJon/Ordis-Discord-Bot/userdata"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -40,6 +41,27 @@ var Commands = []Command{
 				if !memberIsAuthorized {
 					msg += member.Mention() + " is not authorized\n"
 				}
+			}
+		}
+
+		return msg + "Sir."
+	}},
+	{"(msg|messages|written)", func(s *discordgo.Session, m *discordgo.MessageCreate) string {
+		msg := ""
+
+		for _, mentioned := range m.Mentions {	
+		
+			member, err := s.GuildMember(m.GuildID, mentioned.ID)
+			if err != nil {
+				fmt.Println("Error while obtaining member info: ", err)
+				return "Critical error :_"
+			}
+
+			data := userdata.LoadUserData(constants.DataFile)
+			user := data[m.Author.ID]
+					
+			if mentioned.ID != s.State.User.ID {
+				msg += fmt.Sprintf("%s has written %d messages\n", member.Mention(), user.MessagesSent)
 			}
 		}
 
